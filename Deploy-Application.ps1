@@ -67,8 +67,8 @@ Try {
 	[string]$appArch = 'x86'
 	[string]$appLang = 'EN'
 	[string]$appRevision = '01'
-	[string]$appScriptVersion = '1.0.0'
-	[string]$appScriptDate = '03/05/2020'
+	[string]$appScriptVersion = '1.0.1'
+	[string]$appScriptDate = '08/05/2020'
 	[string]$appScriptAuthor = 'IT Department'
 	##*===============================================
 	## Variables: Install Titles (Only set here to override defaults set by the toolkit)
@@ -116,13 +116,14 @@ Try {
 		##*===============================================
 		[string]$installPhase = 'Pre-Installation'
 
-		Show-InstallationWelcome -CloseApps 'iexplore=Internet Explorer' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt
+		Show-InstallationWelcome -CloseApps 'iexplore=Internet Explorer,Skype Meetings App' -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt
 		Show-InstallationProgress
 
 		## <Perform Pre-Installation tasks here>
 
 		# Installation folder
 		$SkypeMeetingsPath = "$envProgramFilesX86\Microsoft\SkypeForBusinessPlugin\$appVersion"
+		# Note. If you change this path make sure you also change the $PluginBasePath in the uninstall section
 
 
 		##*===============================================
@@ -158,24 +159,61 @@ Try {
 					0x20,0x02,0x00,0x00,0x01,0x02,0x00,0x00,0x00,0x00,0x00,0x05,0x20,0x00,0x00,0x00,0x20,0x02,0x00,0x00
 
 				Write-Log -Message "Creating Skype Meetings App registry keys" -Source 'Set-RegistryKey' -LogType 'CMTrace'
+
+				# HKLM\Software
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'AppName' -Value 'GatewayVersion-x64.exe' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'AppPath' -Value "$SkypeMeetingsPath" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'Policy' -Value 3 -Type DWord
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Name 'AppName' -Value 'PluginHost.exe' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Name 'AppPath' -Value "$SkypeMeetingsPath" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Name 'Policy' -Value 3 -Type DWord
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Name 'AppName' -Value 'GatewayVersion.exe' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Name 'AppPath' -Value "$SkypeMeetingsPath" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Name 'Policy' -Value 3 -Type DWord
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_GPU_RENDERING' -Name 'Skype Meetings App.exe' -Value 1 -Type DWord
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER' -Name 'Skype Meetings App.exe' -Value 10 -Type DWord
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER' -Name 'Skype Meetings App.exe' -Value 10 -Type DWord
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\ProtocolExecute\sfb' -Name 'WarnOnOpen' -Value 0 -Type DWord
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\LWAPlugin\15.8' -Name 'CodeMajorVersion' -Value '16.2' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\LWAPlugin\15.8' -Name 'CodeMinorVersion' -Value '0.511' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'GetVersionValue' -Value '16.2@0.511' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'LAUNCHSTATUS' -Value '1' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'CurrentVersion' -Value '16.2.0.511' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'TraceLevel' -Value 7 -Type DWord
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.ccsctp.net' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.lync.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.microsoft.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.microsoftonline.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.office.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.office365.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.officeppe.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.onedrive.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.onmicrosoft.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.outlook.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.sharepoint.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.skype.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.skype.net' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.vdomain.com' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.yammer.com' -Value '' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\iexplore' -Name 'Flags' -Value 4 -Type DWord
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\iexplore\AllowedDomains\*' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\iexplore' -Name 'Flags' -Value 4 -Type DWord
+				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\iexplore\AllowedDomains\*' -Name '(Default)' -Value '' -Type String
+
+				# HKLM\Software\Classes
 				Set-RegistryKey -Key 'HKLM\Software\Classes\AppID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name '(Default)' -Value 'Skype for Business Web App Version Plug-in' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\AppID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name 'LaunchPermission' -Value $LaunchPerms_FE2EC208 -Type Binary
 				Set-RegistryKey -Key 'HKLM\Software\Classes\AppID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\GatewayVersion.exe' -Name 'AppId' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\AppID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\GatewayVersion-x64.exe' -Name 'AppId' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
-
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name '(Default)' -Value 'Skype for Business Web App Version Plug-in' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name 'AppID' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Control' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{59FB2056-D625-48D0-A944-1A85B5AB2640}' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{7DD95801-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{7DD95802-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\LocalServer32' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayVersion-x64.exe" -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\LocalServer32' -Name 'ServerExecutable' -Value "$SkypeMeetingsPath\GatewayVersion-x64.exe" -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\ProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Programmable' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\TypeLib' -Name '(Default)' -Value '{7FEEA833-A3B2-4623-A077-F56E9F9688A8}' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Version' -Name '(Default)' -Value '1.0' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\VersionIndependentProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery' -Type String
 
 				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Name '(Default)' -Value 'Skype Meetings App' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Control' -Name '(Default)' -Value '' -Type String
@@ -207,82 +245,123 @@ Try {
 				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Version' -Name '(Default)' -Value '1.0' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\VersionIndependentProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.ComponentFx' -Type String
 
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name '(Default)' -Value 'Skype for Business Web App Version Plug-in' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name 'AppID' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Control' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{59FB2056-D625-48D0-A944-1A85B5AB2640}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{7DD95801-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{7DD95802-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\LocalServer32' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayVersion-x64.exe" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\LocalServer32' -Name 'ServerExecutable' -Value "$SkypeMeetingsPath\GatewayVersion-x64.exe" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\ProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Programmable' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\TypeLib' -Name '(Default)' -Value '{7FEEA833-A3B2-4623-A077-F56E9F9688A8}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Version' -Name '(Default)' -Value '1.0' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\VersionIndependentProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery' -Type String
+
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx' -Name '(Default)' -Value 'Skype Meetings App' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx\CLSID' -Name '(Default)' -Value '{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx\CurVer' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.ComponentFx.1' -Type String
+
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx.1' -Name '(Default)' -Value 'Skype Meetings App' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx.1\CLSID' -Name '(Default)' -Value '{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}' -Type String
 
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx' -Name '(Default)' -Value 'Skype Meetings App' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx\CLSID' -Name '(Default)' -Value '{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx\CurVer' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx.1' -Type String
+
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx.1' -Name '(Default)' -Value 'Skype Meetings App' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx.1\CLSID' -Name '(Default)' -Value '{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Type String
 
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery' -Name '(Default)' -Value 'Skype for Business Web App Version Plug-in' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery\CLSID' -Name '(Default)' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery\CurVer' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1' -Type String
+
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1' -Name '(Default)' -Value 'Skype for Business Web App Version Plug-in' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1\CLSID' -Name '(Default)' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Classes\MIME\Database\Content Type\application/x-skypeforbusiness-plugin-16.2' -Name 'CLSID' -Value '{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\MIME\Database\Content Type\application/x-skypeforbusiness-version-16.2' -Name 'CLSID' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
 
 				Set-RegistryKey -Key 'HKLM\Software\Classes\sfb' -Name '(Default)' -Value 'URL:sfb' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\sfb' -Name 'URL Protocol' -Value '' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\sfb\shell\open\command' -Name '(Default)' -Value "$SkypeMeetingsPath\Skype Meetings App.exe %1" -Type String
 
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\LWAPlugin\15.8' -Name 'CodeMajorVersion' -Value '16.2' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\LWAPlugin\15.8' -Name 'CodeMinorVersion' -Value '0.511' -Type String
-
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'GetVersionValue' -Value '16.2@0.511' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'LAUNCHSTATUS' -Value '0' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'CurrentVersion' -Value '16.2.0.511' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2' -Name 'TraceLevel' -Value 7 -Type DWord
-
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.ccsctp.net' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.lync.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.microsoft.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.microsoftonline.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.office.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.office365.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.officeppe.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.onedrive.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.onmicrosoft.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.outlook.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.sharepoint.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.skype.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.skype.net' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.vdomain.com' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin\16.2\AllowedDomains' -Name '*.yammer.com' -Value '' -Type String
-
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\iexplore' -Name 'Flags' -Value 4 -Type DWord
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\iexplore\AllowedDomains\*' -Name '(Default)' -Value '' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\iexplore' -Name 'Flags' -Value 4 -Type DWord
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\iexplore\AllowedDomains\*' -Name '(Default)' -Value '' -Type String
-
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{0433A8C7-4371-4CB0-97F0-D5BE7F9F7187}\1.0' -Name '(Default)' -Value 'InProcFrameworkLib' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{0433A8C7-4371-4CB0-97F0-D5BE7F9F7187}\1.0\0\win32' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayActiveX.dll" -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{0433A8C7-4371-4CB0-97F0-D5BE7F9F7187}\1.0\0\win64' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayActiveX-x64.dll" -Type String
+
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}\1.0' -Name '(Default)' -Value 'FrameworkLib' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}\1.0\0\win32' -Name '(Default)' -Value "$SkypeMeetingsPath\PluginHost.exe" -Type String
+
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{7FEEA833-A3B2-4623-A077-F56E9F9688A8}\1.0' -Name '(Default)' -Value 'VersionCheckerLib' -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{7FEEA833-A3B2-4623-A077-F56E9F9688A8}\1.0\0\win32' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayVersion.exe" -Type String
 				Set-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{7FEEA833-A3B2-4623-A077-F56E9F9688A8}\1.0\0\win64' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayVersion-x64.exe" -Type String
 
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'AppName' -Value 'GatewayVersion-x64.exe' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'AppPath' -Value "$SkypeMeetingsPath" -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'Policy' -Value 3 -Type DWord
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Name 'AppName' -Value 'PluginHost.exe' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Name 'AppPath' -Value "$SkypeMeetingsPath" -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Name 'Policy' -Value 3 -Type DWord
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Name 'AppName' -Value 'GatewayVersion.exe' -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Name 'AppPath' -Value "$SkypeMeetingsPath" -Type String
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Name 'Policy' -Value 3 -Type DWord
+				# HKLM\Software\Classes\WOW6432Node
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Name '(Default)' -Value 'Skype Meetings App' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Control' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Implemented Categories\{59FB2056-D625-48D0-A944-1A85B5AB2640}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Implemented Categories\{7DD95801-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Implemented Categories\{7DD95802-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\InprocServer32' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayActiveX.dll" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\InprocServer32' -Name 'ThreadingModel' -Value 'Apartment' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\MiscStatus' -Name '(Default)' -Value '0' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\MiscStatus\1' -Name '(Default)' -Value '131473' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\ProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx.1' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Programmable' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\TypeLib' -Name '(Default)' -Value '{0433A8C7-4371-4CB0-97F0-D5BE7F9F7187}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\Version' -Name '(Default)' -Value '1.0' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}\VersionIndependentProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx' -Type String
 
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_GPU_RENDERING' -Name 'Skype Meetings App.exe' -Value 1 -Type DWord
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER' -Name 'Skype Meetings App.exe' -Value 10 -Type DWord
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER' -Name 'Skype Meetings App.exe' -Value 10 -Type DWord
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}' -Name '(Default)' -Value 'Skype Meetings App' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Control' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Implemented Categories\{59FB2056-D625-48D0-A944-1A85B5AB2640}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Implemented Categories\{7DD95801-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Implemented Categories\{7DD95802-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\LocalServer32' -Name '(Default)' -Value "$SkypeMeetingsPath\PluginHost.exe" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\LocalServer32' -Name 'ServerExecutable' -Value "$SkypeMeetingsPath\PluginHost.exe" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\MiscStatus' -Name '(Default)' -Value '0' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\MiscStatus\1' -Name '(Default)' -Value '131473' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\ProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.ComponentFx.1' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Programmable' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\TypeLib' -Name '(Default)' -Value '{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\Version' -Name '(Default)' -Value '1.0' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}\VersionIndependentProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.ComponentFx' -Type String
 
-				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\ProtocolExecute\sfb' -Name 'WarnOnOpen' -Value 0 -Type DWord
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name '(Default)' -Value 'Skype for Business Web App Version Plug-in' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Name 'AppID' -Value '{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Control' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{59FB2056-D625-48D0-A944-1A85B5AB2640}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{7DD95801-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Implemented Categories\{7DD95802-9882-11CF-9FA9-00AA006C42C4}' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\LocalServer32' -Name '(Default)' -Value "$SkypeMeetingsPath\GatewayVersion.exe" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\LocalServer32' -Name 'ServerExecutable' -Value "$SkypeMeetingsPath\GatewayVersion.exe" -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\ProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Programmable' -Name '(Default)' -Value '' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\TypeLib' -Name '(Default)' -Value '{7FEEA833-A3B2-4623-A077-F56E9F9688A8}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\Version' -Name '(Default)' -Value '1.0' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}\VersionIndependentProgID' -Name '(Default)' -Value 'Microsoft.SkypeForBusinessPlugin16.2.VersionQuery' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{98A06566-A85A-4928-9AD4-456C0FDFD3CB}' -Name '(Default)' -Value 'IVersionQuery' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{98A06566-A85A-4928-9AD4-456C0FDFD3CB}\ProxyStubClsid32' -Name '(Default)' -Value '{00020424-0000-0000-C000-000000000046}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{98A06566-A85A-4928-9AD4-456C0FDFD3CB}\TypeLib' -Name '(Default)' -Value '{7FEEA833-A3B2-4623-A077-F56E9F9688A8}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{98A06566-A85A-4928-9AD4-456C0FDFD3CB}\TypeLib' -Name 'Version' -Value '1.0' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{B9407B52-54D5-4390-A8FD-98DC43C23519}' -Name '(Default)' -Value 'IComponentFx' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{B9407B52-54D5-4390-A8FD-98DC43C23519}\ProxyStubClsid32' -Name '(Default)' -Value '{00020424-0000-0000-C000-000000000046}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{B9407B52-54D5-4390-A8FD-98DC43C23519}\TypeLib' -Name '(Default)' -Value '{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{B9407B52-54D5-4390-A8FD-98DC43C23519}\TypeLib' -Name 'Version' -Value '1.0' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BC5D29F5-2089-443B-9CEA-B8BC6490E5D6}' -Name '(Default)' -Value 'IPluginHost' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BC5D29F5-2089-443B-9CEA-B8BC6490E5D6}\ProxyStubClsid32' -Name '(Default)' -Value '{00020424-0000-0000-C000-000000000046}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BC5D29F5-2089-443B-9CEA-B8BC6490E5D6}\TypeLib' -Name '(Default)' -Value '{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BC5D29F5-2089-443B-9CEA-B8BC6490E5D6}\TypeLib' -Name 'Version' -Value '1.0' -Type String
+
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BED8D1B1-7789-47B5-BB4C-692DA72CECFE}' -Name '(Default)' -Value 'IPluginHost' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BED8D1B1-7789-47B5-BB4C-692DA72CECFE}\ProxyStubClsid32' -Name '(Default)' -Value '{00020424-0000-0000-C000-000000000046}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BED8D1B1-7789-47B5-BB4C-692DA72CECFE}\TypeLib' -Name '(Default)' -Value '{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}' -Type String
+				Set-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BED8D1B1-7789-47B5-BB4C-692DA72CECFE}\TypeLib' -Name 'Version' -Value '1.0' -Type String
 
 				<#
 				# Firefox ≥ 52 does not support NPAPI plugins so there isn't any point creating the following registry keys
@@ -311,7 +390,7 @@ Try {
 			'Direction'   = 'Inbound'
 			'Enabled'     = 'True'
 		}
-		
+
 		$NewFwParams1 = @{
 			'DisplayName' = 'Skype Meetings App'
 			'Program'     = "$SkypeMeetingsPath\Skype Meetings App.exe"
@@ -320,12 +399,12 @@ Try {
 
 		$NewFwParams2 = @{
 			'DisplayName' = 'Skype Meetings App'
-			'Program'     = "$SkypeMeetingsPath\pluginhost.exe"
+			'Program'     = "$SkypeMeetingsPath\PluginHost.exe"
 			'Profile'     = 'Domain,Private'
 		}
-		
+
 		If ((Get-NetFirewallRule @FwParams -PolicyStore 'PersistentStore' -ErrorAction SilentlyContinue).Count -eq 0) {
-			'TCP','UDP' | ForEach { 
+			'TCP','UDP' | ForEach {
 				Write-Log -Message "Creating Windows Defender Firewall Rules" -Source 'New-NetFirewallRule' -LogType 'CMTrace'
 				New-NetFirewallRule @FwParams @NewFwParams1 -Protocol $_
 				New-NetFirewallRule @FwParams @NewFwParams2 -Protocol $_
@@ -344,11 +423,10 @@ Try {
 		##*===============================================
 		[string]$installPhase = 'Pre-Uninstallation'
 
-		Show-InstallationWelcome -CloseApps 'iexplore=Internet Explorer' -CloseAppsCountdown 60
+		Show-InstallationWelcome -CloseApps 'iexplore=Internet Explorer,Skype Meetings App' -CloseAppsCountdown 60
 		Show-InstallationProgress
 
 		## <Perform Pre-Uninstallation tasks here>
-
 
 
 		##*===============================================
@@ -373,23 +451,28 @@ Try {
 		Write-Log -Message "Deleting Skype Meetings App registry keys" -Source 'Remove-RegistryKey' -LogType 'CMTrace'
 		#
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\AppID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx.1' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.ComponentFx' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx.1' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.InProcComponentFx' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery.1' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\Microsoft.SkypeForBusinessPlugin16.2.VersionQuery' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\MIME\Database\Content Type\application/x-skypeforbusiness-plugin-16.2' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\MIME\Database\Content Type\application/x-skypeforbusiness-version-16.2' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\sfb' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\LWAPlugin\15.8' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Recurse $true
-		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{0433A8C7-4371-4CB0-97F0-D5BE7F9F7187}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{3BBC27D9-3AF6-48D8-B210-AED69B326EC7}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Classes\TypeLib\{7FEEA833-A3B2-4623-A077-F56E9F9688A8}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{8035C13E-D5F7-4CF6-B78A-E493D9AA5418}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\CLSID\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{98A06566-A85A-4928-9AD4-456C0FDFD3CB}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{B9407B52-54D5-4390-A8FD-98DC43C23519}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BC5D29F5-2089-443B-9CEA-B8BC6490E5D6}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Classes\WOW6432Node\Interface\{BED8D1B1-7789-47B5-BB4C-692DA72CECFE}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{C48E95B3-4931-4E6B-A600-CD53B16E3511}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{CB7F3505-43FF-4ECE-B60F-A164A832AE46}' -Recurse $true
@@ -397,6 +480,10 @@ Try {
 		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER' -Name 'Skype Meetings App.exe'
 		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER' -Name 'Skype Meetings App.exe'
 		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\ProtocolExecute\sfb' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\LWAPlugin\15.8' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\SkypeForBusinessPlugin' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{3E3AD4BD-346A-460A-80E8-90699B75C00B}' -Recurse $true
+		Remove-RegistryKey -Key 'HKLM\Software\Microsoft\Windows\CurrentVersion\Ext\Stats\{FE2EC208-BECF-4E83-8BF4-E35DBA4EB6A1}' -Recurse $true
 		Remove-RegistryKey -Key 'HKLM\Software\MozillaPlugins\SkypeForBusinessPlugin64-16.2' -Recurse $true
 		#
 
