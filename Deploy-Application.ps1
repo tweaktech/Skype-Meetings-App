@@ -125,6 +125,9 @@ Try {
 		$SkypeMeetingsPath = "$envProgramFilesX86\Microsoft\SkypeForBusinessPlugin\$appVersion"
 		# Note. If you change this path make sure you also change the $PluginBasePath in the uninstall section
 
+		Write-Log -Message "Uninstalling per-user MSI" -Source 'Execute-MSI' -LogType 'CMTrace'
+		Execute-MSI -Action 'Uninstall' -Path '{BC1D9E47-8927-4AA1-A891-7763BC2475B7}'
+
 
 		##*===============================================
 		##* INSTALLATION
