@@ -67,7 +67,7 @@ Try {
 	[string]$appArch = 'x86'
 	[string]$appLang = 'EN'
 	[string]$appRevision = '01'
-	[string]$appScriptVersion = '1.0.1'
+	[string]$appScriptVersion = '1.0.2'
 	[string]$appScriptDate = '08/05/2020'
 	[string]$appScriptAuthor = 'IT Department'
 	##*===============================================
@@ -136,21 +136,27 @@ Try {
 
 		## <Perform Installation tasks here>
 
-		If (Test-Path -Path "$dirSupportFiles\7za.exe" -PathType Leaf) {
-			Write-Log -Message "Installing Skype Meetings App" -Source 'Execute-Process' -LogType 'CMTrace'
-			$Params = '{0} "{1}" {2}"{3}" {4}' -f 'x', "$dirFiles\SkypeMeetingsApp.7z", '-o', "$SkypeMeetingsPath", '-y'
-			Execute-Process -Path "$dirSupportFiles\7za.exe" -Parameters "$Params" -CreateNoWindow -ContinueOnError $false
-		}
+		If (!(Test-Path -Path "$SkypeMeetingsPath\Skype Meetings App.exe" -PathType Leaf)) {
 
-		If (([Version]$envOSVersion).Major -eq '10') {
-			Write-Log -Message "Deleting files that aren't required for Windows 10" -Source 'Remove-File' -LogType 'CMTrace'
-			Remove-File -Path "$SkypeMeetingsPath\api-ms-win-*.dll","$SkypeMeetingsPath\ucrtbase.dll" -ContinueOnError $true
+			If (Test-Path -Path "$dirSupportFiles\7za.exe" -PathType Leaf) {
+				Write-Log -Message "Installing Skype Meetings App" -Source 'Execute-Process' -LogType 'CMTrace'
+				$Params = '{0} "{1}" {2}"{3}" {4}' -f 'x', "$dirFiles\SkypeMeetingsApp.7z", '-o', "$SkypeMeetingsPath", '-y'
+				Execute-Process -Path "$dirSupportFiles\7za.exe" -Parameters "$Params" -CreateNoWindow -ContinueOnError $false
+			}
+
+			If (([Version]$envOSVersion).Major -eq '10') {
+				Write-Log -Message "Deleting files that aren't required for Windows 10" -Source 'Remove-File' -LogType 'CMTrace'
+				Remove-File -Path "$SkypeMeetingsPath\api-ms-win-*.dll","$SkypeMeetingsPath\ucrtbase.dll" -ContinueOnError $true
+			}
+
 		}
 
 		If ($is64Bit) {
 
 			# Add registry keys only if the Skype Meetings App EXE exists
 			If (Test-Path -Path "$SkypeMeetingsPath\Skype Meetings App.exe" -PathType Leaf) {
+
+				Write-Log -Message "Creating Skype Meetings App registry keys" -Source 'Set-RegistryKey' -LogType 'CMTrace'
 
 				$LaunchPerms_FE2EC208 = 0x01,0x00,0x04,0x80,0x74,0x00,0x00,0x00, +
 					0x84,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x14,0x00,0x00,0x00,0x02,0x00,0x60,0x00,0x04,0x00,0x00,0x00, +
@@ -160,8 +166,6 @@ Try {
 					0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x14,0x00,0x1f,0x00,0x00,0x00,0x01,0x01,0x00,0x00, +
 					0x00,0x00,0x00,0x05,0x04,0x00,0x00,0x00,0x01,0x02,0x00,0x00,0x00,0x00,0x00,0x05,0x20,0x00,0x00,0x00, +
 					0x20,0x02,0x00,0x00,0x01,0x02,0x00,0x00,0x00,0x00,0x00,0x05,0x20,0x00,0x00,0x00,0x20,0x02,0x00,0x00
-
-				Write-Log -Message "Creating Skype Meetings App registry keys" -Source 'Set-RegistryKey' -LogType 'CMTrace'
 
 				# HKLM\Software
 				Set-RegistryKey -Key 'HKLM\Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{AEBC497A-8937-4C44-8B8F-FDF4EF81E631}' -Name 'AppName' -Value 'GatewayVersion-x64.exe' -Type String
@@ -415,7 +419,7 @@ Try {
 		}
 
 		## Display a message at the end of the install
-		If (-not $useDefaultMsi) { Show-InstallationPrompt -Message 'Installation complete' -ButtonRightText 'OK' -Icon Information -NoWait }
+		If (-not $useDefaultMsi) { Show-InstallationPrompt -Message 'Installation complete!' -ButtonRightText 'OK' -Icon Information -NoWait }
 
 
 	}
@@ -426,7 +430,7 @@ Try {
 		##*===============================================
 		[string]$installPhase = 'Pre-Uninstallation'
 
-		Show-InstallationWelcome -CloseApps 'iexplore=Internet Explorer,Skype Meetings App' -CloseAppsCountdown 60
+		Show-InstallationWelcome -CloseApps 'iexplore=Internet Explorer,Skype Meetings App' -CloseAppsCountdown 120
 		Show-InstallationProgress
 
 		## <Perform Pre-Uninstallation tasks here>
@@ -442,12 +446,13 @@ Try {
 		$PluginBasePath = "$envProgramFilesX86\Microsoft\SkypeForBusinessPlugin"
 
 		If (Test-Path -Path "$PluginBasePath" -PathType Container) {
-			Write-Log -Message "Deleting Skype Meetings App folder" -Source 'Remove-Folder' -LogType 'CMTrace'
+			Write-Log -Message "Deleting Skype Meetings App folder" -Source 'Remove-Folder' -Severity 2 -LogType 'CMTrace'
 			Remove-Folder -Path "$PluginBasePath" -ContinueOnError $false
 		}
 
 		# Delete parent folder if it is also empty
 		If (!(Test-Path -Path "$envProgramFilesX86\Microsoft\*")) {
+			Write-Log -Message "Deleting Microsoft folder" -Source 'Remove-Folder' -Severity 2 -LogType 'CMTrace'
 			Remove-Folder -Path "$envProgramFilesX86\Microsoft" -ContinueOnError $true
 		}
 
